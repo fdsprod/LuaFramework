@@ -1,18 +1,40 @@
 IrcConnection = {
-    traceSendReceive = false
+    isConnected = false
 }
 
-function IrcConnection:new(host, port)
+function IrcConnection:new(host, port, caps, timeout)
     local self = Object:inherit(self, TcpConnection:new(host, port)) 
 end
 
 function IrcConnection:connect(username, password)
-    local success, err = TcpConnection.connect(self)
+    local success, err = __super:connect()
+
+    local host = __super:getHostAddress()
+    local port = __super:getPort()  
+
+    if not success then
+        log.warn("Unable to connect to "..host..":"..self.port)
+    else
+        tracer:info("Conncted to "..host..":"..self.port)
+       
+        self:settimeout(timeout)  
+        
+        self:send("CAP REQ : "..table.concat(caps, " "))
+        self:send("PASS "..password)
+        self:send("NICK "..username)
+
+        self.isConnected = true
+    end
+
     return success, err
 end
 
+function IrcConnection:join(roomname)
+    self:send("JOIN #"..string.lower(roomname))
+end
+
 function IrcConnection:recv()
-    local packets, err = TcpConnection.recv()
+    local packets, err = __super:recv()
 
     if err then
         return false

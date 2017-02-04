@@ -1,7 +1,7 @@
 Object = {}
 
 function Object:new()
-    local self = utils.deepCopy( self ) -- Create a new self instance
+    local self = utils.table.deepCopy( self ) -- Create a new self instance
     local mt = {}
 
 	setmetatable( self, mt )
@@ -11,10 +11,11 @@ function Object:new()
 end
 
 function Object:inherit( child, parent )
-	local child = utils.deepCopy( child )
+	local child = utils.table.deepCopy( child )
 	if child ~= nil then
 		setmetatable( child, parent )
 		child.__index = child
+		child.__super = parent
 	end
 	return child
 end

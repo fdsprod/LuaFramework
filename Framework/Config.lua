@@ -15,13 +15,13 @@ function Config:new(file, defaults)
             self[k] = v 
         end
     else
-        Tracer.info("Configuration not found, using defaults...")
+        log.info("Configuration not found, using defaults...")
     end    
 
     return self 
 end
 
 function Config:save()
-    Tracer.info("Saving configuration")
+    log.info("Saving configuration")
     utils.serialize(self, 'config', self:getFile())	
 end

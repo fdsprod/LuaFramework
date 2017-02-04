@@ -1,22 +1,54 @@
 
 utils = {
-	diagnostics = {},
+	diagnostics = {
+		log = {
+			adapters = {}
+		}
+	},
 	table = {},
 	io = {}
 }
 
 utils.diagnostics.safeCall = function(callback)
 	if type(object) ~= "function" then
-		Tracer.error("utils.diagnostics.safeCall: callback was not a valid function.")
+		adapter.error("utils.diagnostics.safeCall: callback was not a valid function.")
 	end
 
 	local result, err = pcall(callback)
 
 	if err then 
-		Tracer.error(err)
+		adapter.error(err)
 	end
 
 	return result
+end
+
+utils.diagnostics.log.registerAdapter = function(adapater)
+    table.insert(utils.diagnostics.log.adapters, adapater)
+end
+
+utils.diagnostics.log.debug = function(str)
+	for i, adapter in ipairs(utils.diagnostics.log.adapters) do
+		if adapter and adapter.debug then adapter:debug(str) end
+	end
+end
+
+utils.diagnostics.log.info = function(str)
+	for i, adapter in ipairs(utils.diagnostics.log.adapters) do
+		if adapter and adapter.info then adapter:info(str) end
+	end
+end
+
+utils.diagnostics.log.warn = function(str)
+	for i, adapter in ipairs(utils.diagnostics.log.adapters) do
+		if adapter and adapter.warn then adapter:warn(str) end
+	end
+end
+
+utils.diagnostics.log.error = function(str)
+	for i, adapter in ipairs(utils.diagnostics.log.adapters) do
+		if adapter and adapter.error then adapter:error(str) end
+	end
 end
 
 --from http://lua-users.org/wiki/CopyTable
@@ -60,7 +92,7 @@ utils.io.loadFile = function(filename)
 
 		result = env.dialog
 	else
-		Tracer.warn("Cannot load " .. filename .. ": " .. err)
+		adapter.warn("Cannot load " .. filename .. ": " .. err)
 	end
 
 	return result
@@ -77,3 +109,40 @@ utils.io.doFile = function(filename)
 	env._ = nil;
 	return env
 end
+
+-- Register for shorthand access
+log = utils.diagnostics.log
+
+local PrintLogAdapter = {}
+
+function PrintLogAdapter:new()
+    local self = utils.table.deepCopy( self ) -- Create a new self instance
+    local mt = {}
+
+	setmetatable( self, mt )
+	self.__index = self	
+
+	return self
+end
+
+function PrintLogAdapter.debug(str)
+    self:write("DEBUG: "..(str or ""))
+end
+
+function PrintLogAdapter:info(str)
+    self:write("INFO : "..(str or ""))
+end
+
+function PrintLogAdapter:warn(str)
+    self:write("WARN : "..(str or ""))
+end
+
+function PrintLogAdapter:error(str)
+    self:write("ERROR: "..(str or ""))
+end
+
+function PrintLogAdapter:write(str)
+	print("["..os.date("%H:%M:%S").."] "..str.."\r\n")
+end
+
+log.registerAdapter(PrintLogAdapter:new())
