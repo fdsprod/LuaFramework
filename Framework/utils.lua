@@ -142,7 +142,7 @@ function PrintLogAdapter:error(str)
 end
 
 function PrintLogAdapter:write(str)
-	print("["..os.date("%H:%M:%S").."] "..str.."\r\n")
+	print("["..os.date("%H:%M:%S").."] "..str)
 end
 
 log.registerAdapter(PrintLogAdapter:new())
